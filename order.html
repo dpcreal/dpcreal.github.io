@@ -20,6 +20,7 @@
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -217,13 +218,12 @@
     <a class="back-link" href="index.html">← Back to homepage</a>
   </div>
 
-  <main class="container">
+  <main class="container" id="pageContent">
     <section class="hero">
       <div class="tag">Custom Orders</div>
       <h1>Place your custom wood order</h1>
       <p>
         Tell us what you want built, share the size or style you have in mind, and send your request to Woodpecker Inc.
-        This page is set up as a clean starter order form for GitHub Pages.
       </p>
     </section>
 
@@ -282,9 +282,9 @@
           </div>
 
           <button type="submit" class="btn">Submit Order Request</button>
-          <div class="success" id="successMessage">Your request is ready to send. Replace the email in the form action so submissions go to your inbox.</div>
+          <div class="success" id="successMessage">Your request is being sent.</div>
           <p class="note">
-            Important: change <strong>youremail@example.com</strong> in the form code to your real email address before publishing.
+            Change <strong>youremail@example.com</strong> in the form code to your real email address before publishing.
           </p>
         </form>
       </div>
@@ -320,12 +320,36 @@
   </footer>
 
   <script>
+    const params = new URLSearchParams(window.location.search);
+    const urlToken = params.get('token');
+    const savedToken = sessionStorage.getItem('woodpecker_order_token');
     const form = document.getElementById('orderForm');
     const successMessage = document.getElementById('successMessage');
 
-    form.addEventListener('submit', function () {
-      successMessage.style.display = 'block';
-    });
+    const validToken = urlToken && savedToken && urlToken === savedToken;
+
+    if (!validToken) {
+      document.body.innerHTML = `
+        <main style="min-height:100vh;display:grid;place-items:center;padding:2rem;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(180deg,#faf8f5 0%,#f7f5f2 100%);">
+          <div style="max-width:650px;background:white;border:1px solid #e5ded7;border-radius:28px;padding:2rem;box-shadow:0 16px 40px rgba(31,41,55,0.08);text-align:center;">
+            <h1 style="margin-top:0;font-size:2rem;">This order link has expired</h1>
+            <p style="color:#6b7280;font-size:1.05rem;">
+              Please go back to the homepage and click <strong>Order Now</strong> again to create a new link.
+            </p>
+            <a href="index.html" style="display:inline-block;margin-top:1rem;padding:0.95rem 1.35rem;border-radius:999px;background:#7c4a22;color:white;text-decoration:none;font-weight:800;">
+              Back to homepage
+            </a>
+          </div>
+        </main>
+      `;
+    } else {
+      sessionStorage.removeItem('woodpecker_order_token');
+      history.replaceState(null, '', 'order.html');
+
+      form.addEventListener('submit', function () {
+        successMessage.style.display = 'block';
+      });
+    }
   </script>
 </body>
 </html>
