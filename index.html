@@ -13,7 +13,6 @@
       --muted: #6b7280;
       --primary: #7c4a22;
       --primary-dark: #5f3617;
-      --accent: #d7b899;
       --border: #e5ded7;
       --shadow: 0 16px 40px rgba(31, 41, 55, 0.08);
       --radius: 22px;
@@ -22,6 +21,7 @@
 
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -42,12 +42,12 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.95rem 1.3rem;
+      padding: 0.95rem 1.35rem;
       border-radius: 999px;
-      font-weight: 700;
-      transition: 0.2s ease;
+      font-weight: 800;
       border: 1px solid transparent;
       cursor: pointer;
+      transition: 0.2s ease;
     }
 
     .btn-primary {
@@ -58,18 +58,6 @@
 
     .btn-primary:hover {
       background: var(--primary-dark);
-      transform: translateY(-1px);
-    }
-
-    .btn-secondary {
-      background: rgba(255,255,255,0.72);
-      border-color: var(--border);
-      color: var(--text);
-      backdrop-filter: blur(8px);
-    }
-
-    .btn-secondary:hover {
-      background: #fff;
       transform: translateY(-1px);
     }
 
@@ -109,18 +97,6 @@
       letter-spacing: 0.02em;
     }
 
-    .logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, var(--primary), #a76a37);
-      color: white;
-      box-shadow: var(--shadow);
-      font-size: 1.2rem;
-    }
-
     .brand-logo {
       width: 42px;
       height: 42px;
@@ -149,6 +125,7 @@
       border-radius: 12px;
       padding: 0.6rem 0.85rem;
       font-weight: 800;
+      cursor: pointer;
     }
 
     .hero {
@@ -200,7 +177,7 @@
 
     .stat strong {
       display: block;
-      font-size: 1.35rem;
+      font-size: 1.2rem;
       margin-bottom: 0.15rem;
     }
 
@@ -238,7 +215,7 @@
       border-radius: 20px;
       padding: 1rem;
       backdrop-filter: blur(8px);
-      max-width: 280px;
+      max-width: 300px;
     }
 
     .mockup-title {
@@ -412,20 +389,6 @@
     .quote strong { display: block; }
     .quote span { color: var(--muted); font-size: 0.95rem; }
 
-    .cta {
-      background: linear-gradient(135deg, #6b3c1c 0%, #8e552f 100%);
-      color: white;
-      border-radius: 32px;
-      padding: 2rem;
-      box-shadow: var(--shadow);
-      display: flex;
-      justify-content: space-between;
-      gap: 1.5rem;
-      align-items: center;
-    }
-
-    .cta p { color: rgba(255,255,255,0.84); margin: 0.5rem 0 0; }
-
     footer {
       padding: 2rem 0 3rem;
       color: var(--muted);
@@ -456,7 +419,7 @@
       }
 
       .section-head,
-      .cta {
+      .footer-grid {
         flex-direction: column;
         align-items: flex-start;
       }
@@ -483,7 +446,6 @@
       .hero-stats { grid-template-columns: 1fr; }
       .hero { padding-top: 4rem; }
       .mockup { min-height: 360px; }
-      .cta { padding: 1.5rem; }
     }
   </style>
 </head>
@@ -500,7 +462,6 @@
       <nav class="nav-links" id="navLinks">
         <a href="#about">About</a>
         <a href="#services">Services</a>
-        <a href="#work">Why Us</a>
         <a href="#testimonials">Reviews</a>
       </nav>
     </div>
@@ -517,7 +478,7 @@
             Every order is made to feel personal, practical, and uniquely yours.
           </p>
           <div class="hero-actions">
-            <a href="order.html" class="btn btn-primary">Order Now</a>
+            <a href="order.html" class="btn btn-primary" id="orderNowBtn">Order Now</a>
           </div>
           <div class="hero-stats">
             <div class="stat">
@@ -620,7 +581,7 @@
           </div>
         </div>
 
-        <div class="panel" id="work">
+        <div class="panel">
           <div class="showcase" aria-hidden="true"></div>
         </div>
       </div>
@@ -640,19 +601,19 @@
 
         <div class="testimonial-grid">
           <article class="quote">
-            <p>“Woodpecker Inc delivered exactly what we needed, on time and with great communication from start to finish.”</p>
-            <strong>Alex M.</strong>
-            <span>Homeowner</span>
+            <p>“Woodpecker Inc delivered a custom piece that matched exactly what we had in mind.”</p>
+            <strong>Happy Customer</strong>
+            <span>Custom Order</span>
           </article>
           <article class="quote">
-            <p>“The team was professional, dependable, and easy to work with. We would absolutely hire them again.”</p>
-            <strong>Jordan T.</strong>
-            <span>Business Client</span>
+            <p>“The design felt personal, the quality was excellent, and the process was smooth from start to finish.”</p>
+            <strong>Satisfied Client</strong>
+            <span>Wood Product Buyer</span>
           </article>
           <article class="quote">
-            <p>“The final result looked fantastic. The quality and attention to detail really stood out.”</p>
-            <strong>Priya S.</strong>
-            <span>Repeat Customer</span>
+            <p>“What stood out most was how tailored the final build felt for our space and style.”</p>
+            <strong>Repeat Customer</strong>
+            <span>Custom Build</span>
           </article>
         </div>
       </div>
@@ -669,6 +630,7 @@
       <div class="footer-links">
         <a href="#about">About</a>
         <a href="#services">Services</a>
+        <a href="#testimonials">Reviews</a>
       </div>
     </div>
   </footer>
@@ -677,6 +639,7 @@
     const menuToggle = document.getElementById('menuToggle');
     const navLinks = document.getElementById('navLinks');
     const year = document.getElementById('year');
+    const orderNowBtn = document.getElementById('orderNowBtn');
 
     year.textContent = new Date().getFullYear();
 
@@ -686,6 +649,18 @@
 
     navLinks.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => navLinks.classList.remove('open'));
+    });
+
+    orderNowBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+
+      const token =
+        window.crypto && crypto.randomUUID
+          ? crypto.randomUUID()
+          : Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+      sessionStorage.setItem('woodpecker_order_token', token);
+      window.location.href = `order.html?token=${encodeURIComponent(token)}`;
     });
   </script>
 </body>
