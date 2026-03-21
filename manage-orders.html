@@ -39,6 +39,7 @@
       justify-content: space-between;
       gap: 1rem;
       flex-wrap: wrap;
+      align-items: center;
     }
 
     .back-link {
@@ -69,6 +70,11 @@
       line-height: 1.05;
       letter-spacing: -0.04em;
       margin: 0 0 0.8rem;
+    }
+
+    .hero p {
+      color: var(--muted);
+      margin: 0;
     }
 
     .panel {
@@ -143,11 +149,14 @@
       margin-top: 1rem;
     }
 
-    select, button, textarea {
+    select,
+    button,
+    textarea {
       font: inherit;
     }
 
-    select, textarea {
+    select,
+    textarea {
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 0.8rem 0.9rem;
@@ -174,6 +183,19 @@
 
     .btn:hover {
       background: var(--primary-dark);
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .empty-state {
+      border: 1px dashed var(--border);
+      border-radius: 22px;
+      padding: 1.4rem;
+      background: #fcfbfa;
+      color: var(--muted);
     }
   </style>
 </head>
@@ -207,11 +229,12 @@
       orderBy,
       query,
       serverTimestamp,
-      updateDoc
+      updateDoc,
+      arrayUnion
     } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
     import { auth, db } from "./firebase-config.js";
 
-    const ADMIN_USERNAMES = ["vishwak", "aranjay", "varnav"];
+    const ADMIN_USERNAMES = ["varnav"];
 
     const ordersList = document.getElementById("ordersList");
     const managerInfo = document.getElementById("managerInfo");
@@ -219,7 +242,7 @@
     const successMessage = document.getElementById("successMessage");
 
     function emailToUsername(email) {
-      return String(email || "").replace(/@woodpecker\\.local$/i, "");
+      return String(email || "").replace(/@woodpecker\.local$/i, "");
     }
 
     function escapeHtml(value) {
@@ -256,14 +279,14 @@
     }
 
     async function loadOrders() {
-      ordersList.innerHTML = "<div class='panel'>Loading orders...</div>";
+      ordersList.innerHTML = `<div class="panel">Loading orders...</div>`;
 
       try {
         const q = query(collectionGroup(db, "orders"), orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
-          ordersList.innerHTML = "<div class='panel'>No orders found.</div>";
+          ordersList.innerHTML = `<div class="empty-state">No orders found.</div>`;
           return;
         }
 
@@ -340,7 +363,14 @@
                 progressLabel: statusLabel(newStatus),
                 canCancel: newStatus === "submitted" || newStatus === "reviewing",
                 adminNote: note.value.trim(),
-                statusUpdatedAt: serverTimestamp()
+                statusUpdatedAt: serverTimestamp(),
+                statusHistory: arrayUnion({
+                  status: newStatus,
+                  label: statusLabel(newStatus),
+                  note: note.value.trim() || `Status updated to ${statusLabel(newStatus)}.`,
+                  at: new Date().toISOString(),
+                  by: "admin"
+                })
               });
 
               showSuccess("Order updated successfully.");
