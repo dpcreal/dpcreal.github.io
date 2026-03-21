@@ -1,125 +1,447 @@
-<script type="module">
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-  import { addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-  import { auth, db } from "./firebase-config.js";
-
-  const form = document.getElementById('orderForm');
-  const submitButton = document.getElementById('submitButton');
-  const authNotice = document.getElementById('authNotice');
-  const successMessage = document.getElementById('successMessage');
-  const errorMessage = document.getElementById('errorMessage');
-  const nameInput = document.getElementById('name');
-
-  const FORMSUBMIT_ENDPOINT = 'https://formsubmit.co/595f97935bc2f953174f2be0d9c6793f';
-  let currentUser = null;
-
-  function hideMessages() {
-    authNotice.style.display = 'none';
-    successMessage.style.display = 'none';
-    errorMessage.style.display = 'none';
-  }
-
-  function requireSignIn() {
-    hideMessages();
-    authNotice.innerHTML = 'Please sign in before placing an order. <a href="account.html?next=order" style="color:inherit;text-decoration:underline;">Go to account</a>';
-    authNotice.style.display = 'block';
-    submitButton.disabled = true;
-    submitButton.style.opacity = '0.7';
-  }
-
-  function unlockForm() {
-    authNotice.style.display = 'none';
-    submitButton.disabled = false;
-    submitButton.style.opacity = '1';
-  }
-
-  onAuthStateChanged(auth, (user) => {
-    currentUser = user;
-
-    if (!user) {
-      requireSignIn();
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Place an Order | Woodpecker Inc</title>
+  <meta name="description" content="Place a custom order with Woodpecker Inc for handmade wooden products." />
+  <style>
+    :root {
+      --bg: #f7f5f2;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #7c4a22;
+      --primary-dark: #5f3617;
+      --border: #e5ded7;
+      --shadow: 0 16px 40px rgba(31, 41, 55, 0.08);
+      --radius: 22px;
+      --max: 980px;
     }
 
-    unlockForm();
-    if (!nameInput.value && user.displayName) {
-      nameInput.value = user.displayName;
-    }
-  });
+    * { box-sizing: border-box; }
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    hideMessages();
-
-    if (!currentUser) {
-      requireSignIn();
-      return;
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #faf8f5 0%, #f7f5f2 100%);
+      line-height: 1.6;
     }
 
-    submitButton.disabled = true;
-    submitButton.textContent = 'Submitting...';
+    a { color: inherit; text-decoration: none; }
 
-    const createdAtIso = new Date().toISOString();
+    .container {
+      width: min(100% - 2rem, var(--max));
+      margin: 0 auto;
+    }
 
-    const orderData = {
-      customerName: nameInput.value.trim(),
-      customerEmail: currentUser.email || '',
-      dimensions: form.dimensions.value.trim(),
-      details: form.details.value.trim(),
-      status: 'submitted',
-      progressLabel: 'Submitted',
-      progressStep: 1,
-      canCancel: true,
-      cancellationReason: '',
-      cancelledAt: null,
-      adminNote: '',
-      createdAt: serverTimestamp(),
-      statusUpdatedAt: serverTimestamp(),
-      userUid: currentUser.uid,
-      statusHistory: [
-        {
-          status: 'submitted',
-          label: 'Submitted',
-          note: 'Order was received.',
-          at: createdAtIso,
-          by: 'customer'
-        }
-      ]
-    };
+    .topbar {
+      padding: 1.25rem 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
 
-    try {
-      const docRef = await addDoc(collection(db, 'users', currentUser.uid, 'orders'), orderData);
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
 
-      const emailFormData = new FormData();
-      emailFormData.append('_subject', `New Woodpecker Inc Order Request (${docRef.id})`);
-      emailFormData.append('_captcha', 'false');
-      emailFormData.append('orderId', docRef.id);
-      emailFormData.append('customerName', orderData.customerName);
-      emailFormData.append('customerEmail', orderData.customerEmail);
-      emailFormData.append('dimensions', orderData.dimensions);
-      emailFormData.append('details', orderData.details);
-      emailFormData.append('uid', orderData.userUid);
-      emailFormData.append('status', orderData.status);
+    .hero {
+      padding: 1rem 0 2rem;
+    }
 
-      await fetch(FORMSUBMIT_ENDPOINT, {
-        method: 'POST',
-        headers: { Accept: 'application/json' },
-        body: emailFormData
-      });
+    .tag {
+      display: inline-block;
+      padding: 0.45rem 0.8rem;
+      border-radius: 999px;
+      background: rgba(124, 74, 34, 0.08);
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
 
-      successMessage.innerHTML = `Order submitted successfully. Your order ID is <strong>${docRef.id}</strong>. You can now view it in <a href="account.html#orders" style="color:inherit;text-decoration:underline;">My Orders</a>.`;
-      successMessage.style.display = 'block';
-      form.reset();
-      if (currentUser.displayName) {
-        nameInput.value = currentUser.displayName;
+    h1 {
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin: 0 0 0.8rem;
+    }
+
+    .hero p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 60ch;
+      margin: 0;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 1.2rem;
+      padding-bottom: 3rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin-top: 0;
+      margin-bottom: 0.6rem;
+      font-size: 1.5rem;
+    }
+
+    .panel p {
+      color: var(--muted);
+      margin-top: 0;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .field {
+      display: grid;
+      gap: 0.45rem;
+      margin-bottom: 1rem;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-weight: 700;
+      font-size: 0.96rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.95rem 1rem;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 220px;
+      resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+      outline: 2px solid rgba(124, 74, 34, 0.18);
+      border-color: var(--primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.95rem 1.35rem;
+      border-radius: 999px;
+      border: 0;
+      font-weight: 800;
+      cursor: pointer;
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow);
+      transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .info-list {
+      display: grid;
+      gap: 0.9rem;
+      margin-top: 1.2rem;
+    }
+
+    .info-item {
+      padding: 0.95rem 1rem;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: #fcfbfa;
+    }
+
+    .info-item strong {
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .notice,
+    .success,
+    .error {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 18px;
+      font-weight: 600;
+    }
+
+    .notice {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: #1d4ed8;
+    }
+
+    .success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      color: #166534;
+    }
+
+    .error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #991b1b;
+    }
+
+    .utility-links {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    footer {
+      padding: 0 0 2.5rem;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .layout,
+      .form-grid {
+        grid-template-columns: 1fr;
       }
-    } catch (error) {
-      console.error(error);
-      errorMessage.textContent = error?.message || 'There was a problem submitting your order.';
-      errorMessage.style.display = 'block';
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent = 'Submit Order Request';
     }
-  });
-</script>
+  </style>
+</head>
+<body>
+  <div class="container topbar">
+    <a class="back-link" href="index.html">← Back to homepage</a>
+    <a class="back-link" href="account.html#orders">View my orders →</a>
+  </div>
+
+  <main class="container" id="pageContent">
+    <section class="hero">
+      <div class="tag">Custom Orders</div>
+      <h1>Place your custom wood order</h1>
+      <p>
+        Tell us what you want built and the size you need for your custom order.
+        Once submitted, the order will be saved to your account.
+      </p>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <h2>Order form</h2>
+        <p>Describe what you want and we’ll review your custom request.</p>
+
+        <div class="notice" id="authNotice"></div>
+        <div class="error" id="errorMessage"></div>
+        <div class="success" id="successMessage"></div>
+
+        <form id="orderForm">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="name">Full name</label>
+              <input type="text" id="name" name="name" placeholder="Your name" required />
+            </div>
+
+            <div class="field full">
+              <label for="dimensions">Preferred dimensions</label>
+              <input type="text" id="dimensions" name="dimensions" placeholder="Example: 48 in x 20 in x 30 in" />
+            </div>
+
+            <div class="field full">
+              <label for="details">Describe what you want</label>
+              <textarea id="details" name="details" placeholder="Describe exactly what you want us to build, how you want it to look, what size you need, and any extra details." required></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn" id="submitButton">Submit Order Request</button>
+        </form>
+      </div>
+
+      <aside class="panel">
+        <h2>What to include</h2>
+        <p>The more specific the request, the easier it is to understand what you want built.</p>
+
+        <div class="info-list">
+          <div class="info-item">
+            <strong>What you want made</strong>
+            Describe the wooden product you want.
+          </div>
+          <div class="info-item">
+            <strong>Measurements</strong>
+            Add the size you need for your room or space.
+          </div>
+          <div class="info-item">
+            <strong>Extra details</strong>
+            Include appearance, inspiration, finish, or special features inside the description box.
+          </div>
+          <div class="info-item">
+            <strong>Where it shows up</strong>
+            After you submit, the order will appear in your account page under My Orders.
+          </div>
+        </div>
+
+        <div class="utility-links">
+          <a class="back-link" href="account.html">Go to account</a>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <footer>
+    Woodpecker Inc • Managed by Vishwak Gaddam, Aranjay R., and Varnav Nidikonda
+  </footer>
+
+  <script type="module">
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+    import { addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+    import { auth, db } from "./firebase-config.js";
+
+    const form = document.getElementById("orderForm");
+    const submitButton = document.getElementById("submitButton");
+    const authNotice = document.getElementById("authNotice");
+    const successMessage = document.getElementById("successMessage");
+    const errorMessage = document.getElementById("errorMessage");
+    const nameInput = document.getElementById("name");
+
+    const FORMSUBMIT_ENDPOINT = "https://formsubmit.co/595f97935bc2f953174f2be0d9c6793f";
+    let currentUser = null;
+
+    function hideMessages() {
+      authNotice.style.display = "none";
+      successMessage.style.display = "none";
+      errorMessage.style.display = "none";
+    }
+
+    function requireSignIn() {
+      hideMessages();
+      authNotice.innerHTML = 'Please sign in before placing an order. <a href="account.html?next=order&mode=signin" style="color:inherit;text-decoration:underline;">Go to account</a>';
+      authNotice.style.display = "block";
+      submitButton.disabled = true;
+      submitButton.style.opacity = "0.7";
+    }
+
+    function unlockForm() {
+      authNotice.style.display = "none";
+      submitButton.disabled = false;
+      submitButton.style.opacity = "1";
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+
+      if (!user) {
+        requireSignIn();
+        return;
+      }
+
+      unlockForm();
+      if (!nameInput.value && user.displayName) {
+        nameInput.value = user.displayName;
+      }
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideMessages();
+
+      if (!currentUser) {
+        requireSignIn();
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
+
+      const createdAtIso = new Date().toISOString();
+
+      const orderData = {
+        customerName: nameInput.value.trim(),
+        customerEmail: currentUser.email || "",
+        dimensions: form.dimensions.value.trim(),
+        details: form.details.value.trim(),
+        status: "submitted",
+        progressLabel: "Submitted",
+        progressStep: 1,
+        canCancel: true,
+        cancellationReason: "",
+        cancelledAt: null,
+        adminNote: "",
+        createdAt: serverTimestamp(),
+        statusUpdatedAt: serverTimestamp(),
+        userUid: currentUser.uid,
+        statusHistory: [
+          {
+            status: "submitted",
+            label: "Submitted",
+            note: "Order was received.",
+            at: createdAtIso,
+            by: "customer"
+          }
+        ]
+      };
+
+      try {
+        const docRef = await addDoc(collection(db, "users", currentUser.uid, "orders"), orderData);
+
+        const emailFormData = new FormData();
+        emailFormData.append("_subject", `New Woodpecker Inc Order Request (${docRef.id})`);
+        emailFormData.append("_captcha", "false");
+        emailFormData.append("orderId", docRef.id);
+        emailFormData.append("customerName", orderData.customerName);
+        emailFormData.append("customerEmail", orderData.customerEmail);
+        emailFormData.append("dimensions", orderData.dimensions);
+        emailFormData.append("details", orderData.details);
+        emailFormData.append("uid", orderData.userUid);
+        emailFormData.append("status", orderData.status);
+
+        await fetch(FORMSUBMIT_ENDPOINT, {
+          method: "POST",
+          headers: { Accept: "application/json" },
+          body: emailFormData
+        });
+
+        successMessage.innerHTML = `Order submitted successfully. Your order ID is <strong>${docRef.id}</strong>. You can now view it in <a href="account.html#orders" style="color:inherit;text-decoration:underline;">My Orders</a>.`;
+        successMessage.style.display = "block";
+        form.reset();
+
+        if (currentUser.displayName) {
+          nameInput.value = currentUser.displayName;
+        }
+      } catch (error) {
+        console.error(error);
+        errorMessage.textContent = error?.message || "There was a problem submitting your order.";
+        errorMessage.style.display = "block";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Submit Order Request";
+      }
+    });
+  </script>
+</body>
+</html>
