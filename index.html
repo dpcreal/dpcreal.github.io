@@ -820,7 +820,7 @@
     orderNowBtn.addEventListener("click", handleOrderClick);
     orderNavLink.addEventListener("click", handleOrderClick);
 
-    logoutOption.addEventListener("click", async function () {
+    logoutOption.addEventListener("click", async () => {
       await signOut(auth);
       accountDropdown.classList.remove("open");
     });
